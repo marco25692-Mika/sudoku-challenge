@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Challenge</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Sudoku Challenge</h1>
+
+    <!-- Pop-up für Namenseingabe -->
+    <div id="name-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Willkommen!</h2>
+            <p>Bitte wähle deinen Spielernamen:</p>
+            <input type="text" id="username-input" placeholder="Z. B. SudokuMaster99" maxlength="15">
+            <button class="menu-btn continue-btn" style="width: 100%;" onclick="saveUsername()">Name Speichern</button>
+        </div>
+    </div>
+
+    <!-- Modus-Auswahl (Solo vs. Duell) -->
+    <div id="challenge-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Spielmodus wählen</h2>
+            <p>Möchtest du alleine spielen oder einen Freund per Link herausfordern?</p>
+            <div class="pause-options">
+                <button class="menu-btn continue-btn" onclick="confirmStartSolo()">👤 Alleine spielen</button>
+                <button class="menu-btn restart-btn" onclick="shareChallengeLink()">🔗 Freund via WhatsApp einladen</button>
+                <button class="menu-btn exit-btn" onclick="closeChallengeModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Werbung Pop-up -->
+    <div id="ad-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>📺 Werbung läuft...</h2>
+            <p>Dein kostenloser Tipp wird vorbereitet.</p>
+            <div id="ad-timer-display" style="font-size: 24px; font-weight: bold; color: #007bff; margin: 15px 0;">5 Sek.</div>
+        </div>
+    </div>
+
+    <!-- Interaktive Tipp-Erklärung (wie auf deinen Screenshots) -->
+    <div id="hint-explanation-modal" class="hint-popup" style="display: none;">
+        <h3 id="hint-title">Letzte Zelle</h3>
+        <p id="hint-text">Achte auf die hervorgehobenen Bereiche.</p>
+        <div class="hint-nav">
+            <button class="action-btn" id="hint-prev-btn" onclick="prevHintStep()">◀️ Zurück</button>
+            <button class="action-btn continue-btn" id="hint-next-btn" onclick="nextHintStep()">Weiter ▶️</button>
+        </div>
+    </div>
+
+    <!-- Pause-Menü Pop-up -->
+    <div id="pause-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Spiel Pausiert</h2>
+            <div class="pause-options">
+                <button class="menu-btn continue-btn" onclick="resumeGame()">▶️ Weiter</button>
+                <button class="menu-btn restart-btn" onclick="restartGame()">🔄 Neu starten</button>
+                <button class="menu-btn exit-btn" onclick="exitGame()">❌ Beenden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ranglisten Pop-up -->
+    <div id="leaderboard-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>🏆 Bestzeiten</h2>
+            <div id="leaderboard-content"></div>
+            <button class="menu-btn continue-btn" style="width: 100%; margin-top: 15px;" onclick="closeLeaderboard()">Schließen</button>
+        </div>
+    </div>
+
+    <!-- Begrüßung mit Namensanzeige -->
+    <div id="user-display">
+        Spieler: <span id="player-name-text">...</span> 
+        <button class="small-btn" onclick="resetUsername()">✏️</button>
+    </div>
+    
+    <p id="status-text">Wähle die Schwierigkeit und starte!</p>
+    
+    <!-- Statusleiste -->
+    <div class="status-bar" id="status-bar" style="display: none;">
+        <button id="pause-btn" onclick="pauseGame()">⏸️</button>
+        <div id="error-count">Fehler: 0/3</div>
+        <div id="timer">Zeit: 00:00</div>
+    </div>
+
+    <!-- Hauptmenü -->
+    <div id="setup-menu">
+        <label for="difficulty">Schwierigkeit:</label>
+        <select id="difficulty">
+            <option value="beginner" selected>Anfänger</option>
+            <option value="easy">Einfach</option>
+            <option value="medium">Mittel</option>
+            <option value="hard">Schwer</option>
+        </select>
+        <br>
+        <button id="start-btn" onclick="startGame()">Rätsel Starten</button>
+        <br>
+        <button class="action-btn" style="margin-top: 15px;" onclick="showLeaderboard()">🏆 Rangliste ansehen</button>
+    </div>
+
+    <!-- Spielfeld -->
+    <div id="sudoku-board" style="display: none;"></div>
+
+    <!-- Werkzeuge -->
+    <div class="action-bar" id="controls" style="display: none;">
+        <button class="action-btn" onclick="eraseCell()">Löschen</button>
+        <button class="action-btn" id="notes-btn" onclick="toggleNotes()">Notizen: OFF</button>
+        <button class="action-btn hint-btn" onclick="requestHintWithAd()">💡 Tipp (Ad)</button>
+    </div>
+
+    <!-- Nummern-Pad -->
+    <div class="numpad" id="numpad" style="display: none;">
+        <button class="num-btn" id="num-btn-1" onclick="pressNumber(1)">1</button>
+        <button class="num-btn" id="num-btn-2" onclick="pressNumber(2)">2</button>
+        <button class="num-btn" id="num-btn-3" onclick="pressNumber(3)">3</button>
+        <button class="num-btn" id="num-btn-4" onclick="pressNumber(4)">4</button>
+        <button class="num-btn" id="num-btn-5" onclick="pressNumber(5)">5</button>
+        <button class="num-btn" id="num-btn-6" onclick="pressNumber(6)">6</button>
+        <button class="num-btn" id="num-btn-7" onclick="pressNumber(7)">7</button>
+        <button class="num-btn" id="num-btn-8" onclick="pressNumber(8)">8</button>
+        <button class="num-btn" id="num-btn-9" onclick="pressNumber(9)">9</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

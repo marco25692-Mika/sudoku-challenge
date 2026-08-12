@@ -276,6 +276,25 @@ function handleNumberInput(num) {
     board[selectedCell] = num;
     notes[selectedCell] = [];
 
+    const row = Math.floor(selectedCell / 9);
+    const col = selectedCell % 9;
+    const boxRow = Math.floor(row / 3);
+    const boxCol = Math.floor(col / 3);
+
+    for (let i = 0; i < 81; i++) {
+        const r = Math.floor(i / 9);
+        const c = i % 9;
+        const bRow = Math.floor(r / 3);
+        const bCol = Math.floor(c / 3);
+
+        if (r === row || c === col || (bRow === boxRow && bCol === boxCol)) {
+            const noteIndex = notes[i].indexOf(num);
+            if (noteIndex > -1) {
+                notes[i].splice(noteIndex, 1);
+            }
+        }
+    }
+
     if (num !== solution[selectedCell]) {
         mistakes++;
         updateMistakesDisplay();
@@ -355,8 +374,21 @@ function checkWinCondition() {
 function runAdFlow(onComplete) {
     const adScreen = document.getElementById('ad-screen');
     const adTextEl = document.querySelector('.ad-timer-text');
+    const adContainer = adScreen.querySelector('.ad-container');
     
+    adContainer.style.position = 'relative';
+    
+    let xBtn = adContainer.querySelector('.ad-x-close');
+    if (!xBtn) {
+        xBtn = document.createElement('button');
+        xBtn.className = 'ad-x-close';
+        xBtn.innerHTML = '✕';
+        xBtn.style.cssText = 'position: absolute; top: 12px; right: 15px; background: none; border: none; font-size: 1.2rem; cursor: pointer; display: none; z-index: 10;';
+        adContainer.appendChild(xBtn);
+    }
+
     let timeLeft = 3;
+    xBtn.style.display = 'none';
     adScreen.style.display = 'flex';
     if (adTextEl) adTextEl.innerHTML = `Schließen in <span id="ad-countdown">${timeLeft}</span>s...`;
 
@@ -367,10 +399,21 @@ function runAdFlow(onComplete) {
         
         if (timeLeft <= 0) {
             clearInterval(adInterval);
-            adScreen.style.display = 'none';
-            if (onComplete) onComplete();
+            xBtn.style.display = 'block';
+            if (adTextEl) adTextEl.innerText = "Werbung abgeschlossen.";
         }
     }, 1000);
+
+    const cleanXBtn = xBtn.cloneNode(true);
+    xBtn.parentNode.replaceChild(cleanXBtn, xBtn);
+
+    const finishAd = () => {
+        clearInterval(adInterval);
+        adScreen.style.display = 'none';
+        if (onComplete) onComplete();
+    };
+
+    cleanXBtn.addEventListener('click', finishAd);
 }
 
 function endGameAndShowAd(callback) {
@@ -434,7 +477,7 @@ function showTutorialOverlay(targetIndex) {
 
     let step = 0;
     const steps = [
-        `Achte auf <b>diese Zellen</b> und die hervorgehobenen Bereiche.`,
+        `Achte auf <b>diese Zellen</b> und die hervorgehobнентen Bereiche.`,
         `In <b>diesem Block</b> gibt es nur noch eine Zelle, die die Zahl enthalten kann.`,
         `Da es die einzige Möglichkeit ist, muss in diese Zelle die <b>${correctValue}</b> eingetragen werden.`
     ];

@@ -276,10 +276,11 @@ function handleNumberInput(num) {
     board[selectedCell] = num;
     notes[selectedCell] = [];
 
-    const row = Math.floor(selectedCell / 9);
-    const col = selectedCell % 9;
-    const boxRow = Math.floor(row / 3);
-    const boxCol = Math.floor(col / 3);
+    // Sauberes Entfernen der Notiz in Zeile, Spalte und Block
+    const targetRow = Math.floor(selectedCell / 9);
+    const targetCol = selectedCell % 9;
+    const targetBoxRow = Math.floor(targetRow / 3);
+    const targetBoxCol = Math.floor(targetCol / 3);
 
     for (let i = 0; i < 81; i++) {
         const r = Math.floor(i / 9);
@@ -287,7 +288,7 @@ function handleNumberInput(num) {
         const bRow = Math.floor(r / 3);
         const bCol = Math.floor(c / 3);
 
-        if (r === row || c === col || (bRow === boxRow && bCol === boxCol)) {
+        if (r === targetRow || c === targetCol || (bRow === targetBoxRow && bCol === targetBoxCol)) {
             const noteIndex = notes[i].indexOf(num);
             if (noteIndex > -1) {
                 notes[i].splice(noteIndex, 1);
@@ -477,7 +478,7 @@ function showTutorialOverlay(targetIndex) {
 
     let step = 0;
     const steps = [
-        `Achte auf <b>diese Zellen</b> und die hervorgehobнентen Bereiche.`,
+        `Achte auf <b>diese Zellen</b> und die hervorgehobenen Bereiche.`,
         `In <b>diesem Block</b> gibt es nur noch eine Zelle, die die Zahl enthalten kann.`,
         `Da es die einzige Möglichkeit ist, muss in diese Zelle die <b>${correctValue}</b> eingetragen werden.`
     ];

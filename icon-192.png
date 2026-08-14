@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" fill="#1a1818"/>
+  <rect x="32" y="32" width="128" height="128" fill="#ffffff" rx="8"/>
+  <!-- Grid lines -->
+  <path d="M74 32v128M117 32v128M32 74h128M32 117h128" stroke="#cccccc" stroke-width="2"/>
+  <path d="M74 32v128M117 32v128M32 74h128M32 117h128" stroke="#333333" stroke-width="3"/>
+  <!-- Sudoku Numbers (Scaled to fit 192x192) -->
+  <text x="53" y="64" font-family="sans-serif" font-size="26" font-weight="bold" fill="#000000" text-anchor="middle">5</text>
+  <text x="95" y="64" font-family="sans-serif" font-size="26" font-weight="bold" fill="#000000" text-anchor="middle">3</text>
+  <text x="53" y="105" font-family="sans-serif" font-size="26" font-weight="bold" fill="#2196F3" text-anchor="middle">6</text>
+  <text x="137" y="105" font-family="sans-serif" font-size="26" font-weight="bold" fill="#2196F3" text-anchor="middle">8</text>
+  <text x="95" y="147" font-family="sans-serif" font-size="26" font-weight="bold" fill="#000000" text-anchor="middle">4</text>
+</svg>

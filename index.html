@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sudoku Challenge</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container" id="app-root">
+
+        <!-- 1. START TAB -->
+        <div id="tab-start" class="tab-content active">
+            <div class="header-title">Sudoku Challenge</div>
+            <div class="card player-card">
+                <span class="avatar">👤</span>
+                <div class="player-details">
+                    <span class="label">Spieler</span>
+                    <span id="player-display" class="player-name">MH7</span>
+                </div>
+                <button id="edit-name-btn" class="icon-button">✏️</button>
+            </div>
+
+            <div class="card">
+                <h3>Neues Spiel</h3>
+                <div class="difficulty-picker">
+                    <label for="difficulty">Schwierigkeit</label>
+                    <select id="difficulty">
+                        <option value="easy">Leicht</option>
+                        <option value="medium">Mittel</option>
+                        <option value="hard" selected>Schwer</option>
+                        <option value="expert">Experte</option>
+                    </select>
+                </div>
+                <button id="start-btn" class="btn btn-primary">Rätsel Starten</button>
+            </div>
+        </div>
+
+        <!-- 2. SPIEL-BILDSCHIRM -->
+        <div id="game-screen" class="game-overlay" style="display: none;">
+            <div class="game-header">
+                <button id="back-to-menu-btn" class="icon-button">❮</button>
+                <div class="game-stats">
+                    <span class="stat-badge" id="game-diff-badge" style="background: rgba(0,0,0,0.05); font-weight: 600;">Schwer</span>
+                    <span class="stat-badge">Fehler: <strong id="mistakes">0/3</strong></span>
+                    <span class="stat-badge">Zeit: <strong id="timer">00:00</strong></span>
+                </div>
+                <button id="theme-btn" class="icon-button">🎨</button>
+            </div>
+
+            <!-- Theme / Helligkeits Popover -->
+            <div id="theme-popover" class="popover" style="display: none;">
+                <div class="brightness-control">
+                    <span>☀️</span>
+                    <input type="range" id="brightness-slider" min="50" max="100" value="100">
+                    <span>☀️</span>
+                </div>
+                <div class="theme-options">
+                    <button class="theme-circle white" onclick="setTheme('white')"></button>
+                    <button class="theme-circle cream active" onclick="setTheme('cream')"></button>
+                    <button class="theme-circle dark" onclick="setTheme('dark')"></button>
+                </div>
+            </div>
+
+            <div id="sudoku-board" class="board"></div>
+
+            <div class="action-bar">
+                <button id="erase-btn" class="btn btn-action">Löschen</button>
+                <button id="notes-btn" class="btn btn-action">Notizen: OFF</button>
+                <button id="hint-btn" class="btn btn-hint">💡 Hinweis (Ad)</button>
+            </div>
+
+            <div class="number-pad">
+                <button class="num-btn" data-value="1">1</button>
+                <button class="num-btn" data-value="2">2</button>
+                <button class="num-btn" data-value="3">3</button>
+                <button class="num-btn" data-value="4">4</button>
+                <button class="num-btn" data-value="5">5</button>
+                <button class="num-btn" data-value="6">6</button>
+                <button class="num-btn" data-value="7">7</button>
+                <button class="num-btn" data-value="8">8</button>
+                <button class="num-btn" data-value="9">9</button>
+            </div>
+        </div>
+
+        <!-- WERBUNG OVERLAY -->
+        <div id="ad-screen" class="ad-overlay" style="display: none;">
+            <div class="ad-container">
+                <div class="ad-badge">Anzeige / Werbespot</div>
+                <div class="ad-content">
+                    <h3>📢 Dankeschön fürs Spielen!</h3>
+                    <p>Unterstütze Sudoku Challenge durch kurze Werbung.</p>
+                    <div class="ad-box">
+                        <span>📱 Premium Sudoku Apps & Features</span>
+                    </div>
+                </div>
+                <div class="ad-timer-text">Schließen in <span id="ad-countdown">3</span>s...</div>
+                <button id="close-ad-btn" class="btn btn-primary" style="display: none;">Schließen</button>
+            </div>
+        </div>
+
+        <!-- 3. TÄGLICHE CHALLENGE TAB -->
+        <div id="tab-daily" class="tab-content">
+            <div class="header-title">Tägliche Challenge</div>
+            <div class="card text-center">
+                <div class="daily-badge">📅</div>
+                <h3>Tagesrätsel für Heute</h3>
+                <p>Löse das tägliche Rätsel und sammle Trophäen!</p>
+                <button id="start-daily-btn" class="btn btn-primary" style="margin-top:15px;">Heute Spielen</button>
+            </div>
+        </div>
+
+        <!-- 4. RANGLISTE TAB -->
+        <div id="tab-ranking" class="tab-content">
+            <div class="header-title">Rangliste</div>
+            
+            <!-- Kategorie Tabs (Freunde / DE / Welt) -->
+            <div class="stats-tabs" style="margin: 0 15px 10px 15px;">
+                <button class="diff-tab active" onclick="switchRankingCategory('friends', this)">Freunde</button>
+                <button class="diff-tab" onclick="switchRankingCategory('germany', this)">Deutschland</button>
+                <button class="diff-tab" onclick="switchRankingCategory('global', this)">Weltweit</button>
+            </div>
+
+            <!-- Schwierigkeitsgrad Tabs für die Rangliste -->
+            <div class="stats-tabs" style="margin: 0 15px 15px 15px;">
+                <button class="diff-tab active" onclick="switchRankingDiff('easy', this)">Leicht</button>
+                <button class="diff-tab" onclick="switchRankingDiff('medium', this)">Mittel</button>
+                <button class="diff-tab active-hard" onclick="switchRankingDiff('hard', this)">Schwer</button>
+                <button class="diff-tab" onclick="switchRankingDiff('expert', this)">Experte</button>
+            </div>
+
+            <div class="card" style="margin-top: 0;">
+                <p id="ranking-desc" style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
+                    Vergleiche deine Siege und besten Zeiten.
+                </p>
+                <div class="stats-stack" id="ranking-list-container">
+                    <!-- Wird dynamisch gefüllt -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. ICH / PROFIL TAB -->
+        <div id="tab-profile" class="tab-content">
+            <div class="header-title">Ich</div>
+
+            <div class="menu-group">
+                <div class="menu-card" id="btn-open-awards">
+                    <div class="icon-circle gold">🏆</div>
+                    <span class="menu-title">Auszeichnungen</span>
+                    <span class="chevron">›</span>
+                </div>
+                <div class="menu-card" id="btn-open-stats">
+                    <div class="icon-circle blue">📊</div>
+                    <span class="menu-title">Statistik</span>
+                    <span class="chevron">›</span>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <div class="menu-card" id="btn-open-settings">
+                    <div class="icon-circle red">⚙️</div>
+                    <span class="menu-title">Einstellungen</span>
+                    <span class="chevron">›</span>
+                </div>
+                <div class="menu-card" id="btn-open-howtoplay">
+                    <div class="icon-circle orange">🎓</div>
+                    <span class="menu-title">So wird gespielt</span>
+                    <span class="chevron">›</span>
+                </div>
+                <div class="menu-card" id="btn-open-rules">
+                    <div class="icon-circle cyan">📖</div>
+                    <span class="menu-title">Regeln</span>
+                    <span class="chevron">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- UNTERBILDSCHIRM: EINSTELLUNGEN -->
+        <div id="sub-settings" class="sub-screen" style="display:none;">
+            <div class="sub-header">
+                <button class="back-btn" onclick="closeSubScreen('sub-settings')">❮</button>
+                <h2>Einstellungen</h2>
+            </div>
+            
+            <div class="settings-list">
+                <div class="setting-item">
+                    <span>Töne</span>
+                    <label class="switch"><input type="checkbox" id="setting-sound"><span class="slider"></span></label>
+                </div>
+                <div class="setting-item">
+                    <span>Vibration</span>
+                    <label class="switch"><input type="checkbox" id="setting-vibe" checked><span class="slider"></span></label>
+                </div>
+                <div class="setting-item">
+                    <span>Timer</span>
+                    <label class="switch"><input type="checkbox" id="setting-timer" checked><span class="slider"></span></label>
+                </div>
+                <div class="setting-item">
+                    <span>Intelligente Hinweise</span>
+                    <label class="switch"><input type="checkbox" id="setting-hints" checked><span class="slider"></span></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- UNTERBILDSCHIRM: STATISTIK -->
+        <div id="sub-stats" class="sub-screen" style="display:none;">
+            <div class="sub-header">
+                <button class="back-btn" onclick="closeSubScreen('sub-stats')">❮</button>
+                <h2>Statistik</h2>
+            </div>
+
+            <div class="stats-tabs">
+                <button class="diff-tab active" onclick="switchStatsDiff('easy', this)">Leicht</button>
+                <button class="diff-tab" onclick="switchStatsDiff('medium', this)">Mittel</button>
+                <button class="diff-tab active" onclick="switchStatsDiff('hard', this)">Schwer</button>
+                <button class="diff-tab" onclick="switchStatsDiff('expert', this)">Experte</button>
+            </div>
+
+            <h3 style="margin: 15px 0 10px 0;">Spiele</h3>
+            <div class="stats-stack">
+                <div class="stat-row">
+                    <div class="stat-left"><span>🧩</span> Gestartete Spiele</div>
+                    <div class="stat-val" id="stat-played">0</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-left"><span>👑</span> Gewonnene Spiele</div>
+                    <div class="stat-val" id="stat-won">0</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-left"><span>🚩</span> Gewinnrate</div>
+                    <div class="stat-val" id="stat-winrate">0%</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-left"><span>🎯</span> Fehlerfrei gewonnen</div>
+                    <div class="stat-val" id="stat-perfect">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UNTERBILDSCHIRM: AUSZEICHNUNGEN -->
+        <div id="sub-awards" class="sub-screen" style="display:none;">
+            <div class="sub-header">
+                <button class="back-btn" onclick="closeSubScreen('sub-awards')">❮</button>
+                <h2>Auszeichnungen</h2>
+            </div>
+            <div class="awards-grid">
+                <div class="award-card">
+                    <div class="award-icon">🥇</div>
+                    <div class="award-title">Erster Sieg</div>
+                    <div class="award-desc">Gewinne dein erstes Sudoku-Spiel.</div>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">⭐</div>
+                    <div class="award-title">Perfekt!</div>
+                    <div class="award-desc">Schließe ein Spiel ohne Fehler ab.</div>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">🔥</div>
+                    <div class="award-title">Sudoku-Meister</div>
+                    <div class="award-desc">Gewinne ein Spiel auf Schwer oder Experte.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UNTERBILDSCHIRM: SO WIRD GESPIELT -->
+        <div id="sub-howtoplay" class="sub-screen" style="display:none;">
+            <div class="sub-header">
+                <button class="back-btn" onclick="closeSubScreen('sub-howtoplay')">❮</button>
+                <h2>So wird gespielt</h2>
+            </div>
+            <div class="info-card">
+                <h3>Anleitung</h3>
+                <ol class="info-list">
+                    <li>Wähle ein leeres Feld im Spielfeld aus.</li>
+                    <li>Tippe unten auf eine Zahl von 1 bis 9, um sie einzutragen.</li>
+                    <li>Nutze den Notizen-Modus, um Kandidaten-Zahlen einzutragen.</li>
+                    <li>Vermeide 3 Fehler, sonst musst du neu starten.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- UNTERBILDSCHIRM: REGELN -->
+        <div id="sub-rules" class="sub-screen" style="display:none;">
+            <div class="sub-header">
+                <button class="back-btn" onclick="closeSubScreen('sub-rules')">❮</button>
+                <h2>Regeln</h2>
+            </div>
+            <div class="info-card">
+                <h3>Sudoku-Grundregeln</h3>
+                <ul class="info-list">
+                    <li>Jede <strong>Zeile</strong> muss die Zahlen 1 bis 9 ohne Wiederholung enthalten.</li>
+                    <li>Jede <strong>Spalte</strong> muss die Zahlen 1 bis 9 ohne Wiederholung enthalten.</li>
+                    <li>Jeder 3×3 <strong>Block</strong> muss die Zahlen 1 bis 9 ohne Wiederholung enthalten.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FOOTER NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchTab('tab-start', this)">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Start</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('tab-daily', this)">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">Tägliche</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('tab-ranking', this)">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">Rangliste</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('tab-profile', this)">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Ich</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

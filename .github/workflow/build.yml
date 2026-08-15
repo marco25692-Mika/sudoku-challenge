@@ -1,0 +1,24 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build and Test iOS App
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build project
+        run: |
+          cd src
+          xcodebuild -project Sudoku.xcodeproj -scheme Sudoku -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build

@@ -1,0 +1,6 @@
+{
+  "appId": "com.mh7.sudokuchallenge",
+  "appName": "Sudoku Challenge",
+  "webDir": ".",
+  "bundledWebRuntime": false
+}

@@ -1,3 +1,5 @@
+// --- SUDOKU LOGIK & ADMOB INTEGRATION ---
+
 let board = Array(81).fill(0);
 let solution = Array(81).fill(0);
 let initialBoard = Array(81).fill(0);
@@ -23,7 +25,6 @@ let stats = JSON.parse(localStorage.getItem('sudoku_stats_v2')) || {
 
 let playerName = localStorage.getItem('sudoku_player') || 'MH7';
 
-// Ranglisten-Datenstruktur aufgeteilt nach Schwierigkeitsgraden
 let friendRanking = JSON.parse(localStorage.getItem('sudoku_friend_ranking_v2')) || {
     easy: [
         { name: 'MH7 (Du)', wins: 0, bestTime: '--:--' },
@@ -219,11 +220,9 @@ function setupEventListeners() {
     document.getElementById('hint-btn')?.addEventListener('click', showSmartHint);
 }
 
-// Neues Verhalten: Startet direkt das Spiel, pausiert sofort und fragt nach Duell-Link
 function startGameWithPrompt() {
     startGameDirectly();
     
-    // Kurz pausieren und Abfrage-Overlay öffnen
     clearInterval(timerInterval);
     showGameModeSelectionOverlay(currentDifficulty);
 }
@@ -255,12 +254,12 @@ function showGameModeSelectionOverlay(diff) {
     overlay.querySelector('#mode-friend').addEventListener('click', () => {
         overlay.remove();
         triggerWhatsAppInvite(diff);
-        startTimer(); // Timer nach Teilen fortsetzen
+        startTimer();
     });
 
     overlay.querySelector('#mode-resume').addEventListener('click', () => {
         overlay.remove();
-        startTimer(); // Timer fortsetzen
+        startTimer();
     });
 }
 
@@ -381,7 +380,6 @@ function startGameDirectly() {
     document.getElementById('game-screen').style.display = 'flex';
     document.getElementById('theme-popover').style.display = 'none';
     
-    // Schwierigkeit oben im Spiel-Header aktualisieren
     const diffBadge = document.getElementById('game-diff-badge');
     if (diffBadge) diffBadge.innerText = getDifficultyName(currentDifficulty);
 
@@ -616,14 +614,35 @@ function checkWinCondition() {
     }
 }
 
-function runAdFlow(onComplete) {
-    const adScreen = document.getElementById('ad-screen');
-    const adTextEl = document.querySelector('.ad-timer-text');
-    let adContainer = adScreen.querySelector('.ad-container');
-    
-    if (!adContainer) {
-        adContainer = adScreen.querySelector('div') || adScreen;
+// --- INTEGRIERTE ADMOB & FALLBACK LOGIK ---
+async function runAdFlow(onComplete) {
+    try {
+        // Prüfen ob echte Capacitor AdMob Umgebung aktiv ist
+        if (window.Capacitor && window.AdMob) {
+            await AdMob.initialize();
+            await AdMob.prepareRewardVideoAd({
+                adId: 'ca-app-pub-8480998273721673/5972616590',
+                autoShow: true
+            });
+            
+            AdMob.addListener('onRewardedVideoCompleted', () => {
+                if (onComplete) onComplete();
+            });
+            return;
+        }
+    } catch (e) {
+        console.log("AdMob native nicht verfügbar, nutze Web-Simulation.", e);
     }
+
+    // Web-Fallback Simulation mit 3 Sekunden Countdown (perfekt fürs Testen im Browser)
+    const adScreen = document.getElementById('ad-screen');
+    if (!adScreen) {
+        if (onComplete) onComplete();
+        return;
+    }
+    
+    const adTextEl = document.querySelector('.ad-timer-text');
+    let adContainer = adScreen.querySelector('.ad-container') || adScreen;
     adContainer.style.position = 'relative';
     
     let xBtn = adContainer.querySelector('.ad-x-close');
@@ -664,31 +683,9 @@ function runAdFlow(onComplete) {
 
     newXBtn.style.display = 'block';
     
-    document.addEventListener('click', function handleAdClick(e) {
-        if (e.target.classList.contains('ad-x-close') || e.target.closest('.ad-x-close')) {
-            if (adScreen.style.display === 'flex' && timeLeft <= 0) {
-                document.removeEventListener('click', handleAdClick);
-                finishAd();
-            }
-        }
-    });
-    
-    const checkTimerDone = setInterval(() => {
-        if (timeLeft <= 0) {
-            newXBtn.style.display = 'block';
-        }
-    }, 200);
-
-    window._currentAdFinisher = () => {
-        clearInterval(adInterval);
-        clearInterval(checkTimerDone);
-        adScreen.style.display = 'none';
-        if (onComplete) onComplete();
-    };
-    
     newXBtn.onclick = () => {
         if (timeLeft <= 0) {
-            window._currentAdFinisher();
+            finishAd();
         }
     };
 }
@@ -810,7 +807,6 @@ function saveFriendRanking() {
 function switchRankingCategory(category, btn) {
     currentRankingCategory = category;
     
-    // Aktiven Button in der ersten Zeile setzen
     const parentContainer = btn.parentElement;
     parentContainer.querySelectorAll('.diff-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -830,7 +826,6 @@ function switchRankingCategory(category, btn) {
 function switchRankingDiff(diff, btn) {
     currentRankingDiff = diff;
     
-    // Aktiven Button in der Schwierigkeits-Zeile setzen
     const parentContainer = btn.parentElement;
     parentContainer.querySelectorAll('.diff-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -854,7 +849,6 @@ function updateRankingUI() {
         }
     });
 
-    // Nach Siegen sortieren
     dataset.sort((a, b) => b.wins - a.wins);
 
     container.innerHTML = '';
@@ -898,9 +892,8 @@ function switchStatsDiff(diff, btn) {
 
 function updateStatsUI(diff) {
     const d = stats[diff] || { played: 0, won: 0, perfect: 0 };
-    document.getElementById('stat-played').innerText = d.played;
-    document.getElementById('stat-won').innerText = d.won;
-    const rate = d.played > 0 ? Math.round((d.won / d.played) * 100) : 0;
-    document.getElementById('stat-winrate').innerText = `${rate}%`;
-    document.getElementById('stat-perfect').innerText = d.perfect;
+    const playedEl = document.getElementById('stat-played');
+    const wonEl = document.getElementById('stat-won');
+    if (playedEl) playedEl.innerText = d.played;
+    if (wonEl) wonEl.innerText = d.won;
 }
